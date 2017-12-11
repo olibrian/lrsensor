@@ -1,5 +1,5 @@
-/*lrsensor
- * 
+/* lrsensor
+ * Get GPS Position and send it to a MQTT Broker
  * Hardware: SIM808_v2; Arudio compatible board
  * Olivier Brian
  */
@@ -60,12 +60,9 @@ void setup() {
   if (!sim808.enableGPS(true))
      Serial.println(F("Failed to turn on"));
          
-
-
 }
 
 void loop() {
-
         // check GPS fix
         int8_t stat;
         stat = sim808.GPSstatus();
@@ -84,7 +81,6 @@ void loop() {
             Serial.println(gpsdata);
         }
         delay(500);
-
 }
 
 
