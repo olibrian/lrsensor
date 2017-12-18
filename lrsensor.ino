@@ -27,6 +27,7 @@ int Powerkey = 9; // PowerKey to enable 808 Modul
 char replybuffer[255]; //Buffer for 808 replies
 
 char gpsdata[120];
+float latitude, longitude, speed_kph, heading, altitude;
 
 
 uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout = 0);
@@ -109,24 +110,74 @@ void loop() {
 
   if (stat > 2) {
     // check for GPS location
-    sim808.getGPS(0, gpsdata, 120);
+    // sim808.getGPS(0, gpsdata, 120);
     //Serial.println(F("Reply in format: mode,fixstatus,utctime(yyyymmddHHMMSS),latitude,longitude,altitude,speed,course,fixmode,reserved1,HDOP,PDOP,VDOP,reserved2,view_satellites,used_satellites,reserved3,C/N0max,HPA,VPA"));
-    Serial.println(gpsdata);
+    //Serial.println(gpsdata);
+
+
+    // Grab a GPS reading.
+    bool gpsFix = sim808.getGPS(&latitude, &longitude, &speed_kph, &heading, &altitude);
+
+    Serial.print("Latitude: ");
+    Serial.print(latitude);
+    Serial.println("");
+
+    Serial.print("Longitude: ");
+    Serial.print(longitude);
+    Serial.println("");
+
   }
 
   // Connect MQTT
   MQTT_connect();
 
-  if (! geolocation.publish(gpsdata)) {
+  logLocation(latitude, longitude, altitude, geolocation);
+
+  /*
+  if (! geolocation.publish(latitude+","+longitude)) {
     Serial.println(F("Failed"));
     txfailures++;
   } else {
     Serial.println(F("MQTT send OK!"));
     txfailures = 0;
   }
+  */
   delay(1000);  // wait for 1 second
 }
 
+
+// Serialize the lat, long, altitude to a CSV string that can be published to the specified feed.
+void logLocation(float latitude, float longitude, float altitude, Adafruit_MQTT_Publish& publishFeed) {
+  // Initialize a string buffer to hold the data that will be published.
+  char sendBuffer[120];
+  memset(sendBuffer, 0, sizeof(sendBuffer));
+  int index = 0;
+
+  // Start with '0,' to set the feed value.  The value isn't really used so 0 is used as a placeholder.
+  sendBuffer[index++] = '0';
+  sendBuffer[index++] = ',';
+
+  // Now set latitude, longitude, altitude separated by commas.
+  dtostrf(latitude, 2, 6, &sendBuffer[index]);
+  index += strlen(&sendBuffer[index]);
+  sendBuffer[index++] = ',';
+  dtostrf(longitude, 3, 6, &sendBuffer[index]);
+  index += strlen(&sendBuffer[index]);
+  sendBuffer[index++] = ',';
+  dtostrf(altitude, 2, 6, &sendBuffer[index]);
+
+  // Finally publish the string to the feed.
+  Serial.print(F("Publishing location: "));
+  Serial.println(sendBuffer);
+  if (!publishFeed.publish(sendBuffer)) {
+    Serial.println(F("Publish failed!"));
+    txfailures++;
+  }
+  else {
+    Serial.println(F("Publish succeeded!"));
+    txfailures = 0;
+  }
+}
 
 // Function to connect and reconnect as necessary to the MQTT server.
 // Should be called in the loop function and it will take care if connecting.
