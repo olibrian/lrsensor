@@ -20,7 +20,7 @@
 #define MQTT_SERVER      "io.adafruit.com"
 #define MQTT_SERVERPORT  1883
 #define MQTT_USERNAME  "obrian"
-#define MQTT_KEY       "63e391a67f2e401eb988cd200774a2aa"
+#define MQTT_KEY       "XXXX"
 
 int Powerkey = 9; // PowerKey to enable 808 Modul
 // this is a large buffer for replies
@@ -56,7 +56,7 @@ boolean FONAconnect(const __FlashStringHelper *apn, const __FlashStringHelper *u
 /****************************** Feeds ***************************************/
 
 // Setup feeds for publishing.
-Adafruit_MQTT_Publish geolocation = Adafruit_MQTT_Publish(&mqtt, MQTT_USERNAME "/feeds/geolocation");
+Adafruit_MQTT_Publish geolocation = Adafruit_MQTT_Publish(&mqtt, MQTT_USERNAME "/feeds/geolocation/csv");
 
 void setup() {
   // Start sim808
@@ -126,12 +126,12 @@ void loop() {
     Serial.print(longitude);
     Serial.println("");
 
+    // Connect MQTT
+    MQTT_connect();
+
+    logLocation(latitude, longitude, altitude, geolocation);
+
   }
-
-  // Connect MQTT
-  MQTT_connect();
-
-  logLocation(latitude, longitude, altitude, geolocation);
 
   /*
   if (! geolocation.publish(latitude+","+longitude)) {
@@ -142,7 +142,7 @@ void loop() {
     txfailures = 0;
   }
   */
-  delay(1000);  // wait for 1 second
+  delay(10000);  // wait for 10 second
 }
 
 
