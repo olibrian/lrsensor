@@ -20,7 +20,7 @@
 #define MQTT_SERVER      "io.adafruit.com"
 #define MQTT_SERVERPORT  1883
 #define MQTT_USERNAME  "obrian"
-#define MQTT_KEY       "XXXX"
+#define MQTT_KEY       "XXX" //Replace with MQTT Key
 
 int Powerkey = 9; // PowerKey to enable 808 Modul
 // this is a large buffer for replies
@@ -57,6 +57,7 @@ boolean FONAconnect(const __FlashStringHelper *apn, const __FlashStringHelper *u
 
 // Setup feeds for publishing.
 Adafruit_MQTT_Publish geolocation = Adafruit_MQTT_Publish(&mqtt, MQTT_USERNAME "/feeds/geolocation/csv");
+Adafruit_MQTT_Publish battery_feed = Adafruit_MQTT_Publish(&mqtt, MQTT_USERNAME "/feeds/battery");
 
 void setup() {
   // Start sim808
@@ -126,25 +127,49 @@ void loop() {
     Serial.print(longitude);
     Serial.println("");
 
+
+    // Grab battery reading
+    uint16_t vbat;
+    sim808.getBattPercent(&vbat);
+
     // Connect MQTT
     MQTT_connect();
 
     logLocation(latitude, longitude, altitude, geolocation);
+    logBatteryPercent(vbat, battery_feed);
+
 
   }
 
   /*
-  if (! geolocation.publish(latitude+","+longitude)) {
+    if (! geolocation.publish(latitude+","+longitude)) {
     Serial.println(F("Failed"));
     txfailures++;
-  } else {
+    } else {
     Serial.println(F("MQTT send OK!"));
     txfailures = 0;
-  }
+    }
   */
   delay(10000);  // wait for 10 second
 }
 
+
+// Log battery
+void logBatteryPercent(uint32_t indicator, Adafruit_MQTT_Publish& publishFeed) {
+
+  // Publish
+  Serial.print(F("Publishing battery percentage: "));
+  Serial.println(indicator);
+  if (!publishFeed.publish(indicator)) {
+    Serial.println(F("Publish failed!"));
+    txfailures++;
+  }
+  else {
+    Serial.println(F("Publish succeeded!"));
+    txfailures = 0;
+  }
+
+}
 
 // Serialize the lat, long, altitude to a CSV string that can be published to the specified feed.
 void logLocation(float latitude, float longitude, float altitude, Adafruit_MQTT_Publish& publishFeed) {
