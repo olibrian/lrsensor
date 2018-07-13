@@ -8,4 +8,4 @@ Aus einem Defender td5 wird ein inteligentes System bestehend aus zahlreichen Se
 ** Themperatur
 ** ...
 * Versand via MQTT Broker (Publisher) 
-* Ausertung via Interface (Subscriber)
+* Auswertung via Interface (Subscriber)
